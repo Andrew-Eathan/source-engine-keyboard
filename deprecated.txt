@@ -1,0 +1,46 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace sorce_engin_keyboard
+{
+    class SoundManager
+    {
+        private Dictionary<string, string> Snds = new Dictionary<string, string>();
+        private int sndcnt = 0;
+        [DllImport("winmm.dll")]
+        private static extern int mciSendStringW(string command, StringBuilder buffer, int bufferSize, IntPtr hwndCallback);
+
+        public bool AddSound(string SoundName, string SndFilePath)
+        {
+            if (Snds.ContainsKey(SoundName)) return true;
+            if (SoundName.Trim() == "" || !System.IO.File.Exists(SndFilePath)) { return false; }
+            if (mciSendStringW("open \"" + SndFilePath + "\" type waveaudio alias Snd_" + sndcnt.ToString(), null, 0, IntPtr.Zero)!= 0)
+            {
+                Debug.WriteLine("Loaded sound " + SoundName + " - Alias Snd_"+sndcnt.ToString());
+                Snds.Add(SoundName, "Snd_" + sndcnt.ToString());
+                sndcnt++;
+            }
+            return true;
+        }
+
+        public bool Play(string SoundName)
+        {
+            if (!Snds.ContainsKey(SoundName)) return false;
+
+            //mciSendStringW("seek " + Snds[SoundName] + " to start", null, 0, IntPtr.Zero);
+
+            int a = mciSendStringW("play " + Snds[SoundName], null, 0, IntPtr.Zero);
+
+            Debug.WriteLine("play " + Snds[SoundName]);
+            
+            if (a != 0) return false;
+
+            return true;
+        }
+    }
+}
